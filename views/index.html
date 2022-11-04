@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>FTP'EIRB</title>
+    <link href="/css/hacker.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/img/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon/favicon-16x16.png">
+    <link rel="manifest" href="/img/favicon/site.webmanifest">
+    <link rel="mask-icon" href="/img/favicon/safari-pinned-tab.svg" color="#74c92e">
+    <link rel="shortcut icon" href="/img/favicon/favicon.ico">
+    <meta name="msapplication-TileColor" content="#74c92e">
+    <meta name="msapplication-config" content="/img/favicon/browserconfig.xml">
+    <meta name="theme-color" content="#000000">
+
+    <meta property="og:url" content="https://ftp-eirb.aboin.fr/">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="ftp'eirb">
+    <meta property="og:description"
+        content="Console d'administration des sites web et services hébergés par Eirbware">
+    <meta property="og:image" content="https://ftp-eirb.aboin.fr/img/banner.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta property="twitter:domain" content="ftp-eirb.fr">
+    <meta property="twitter:url" content="https://ftp-eirb.aboin.fr/">
+    <meta name="twitter:title" content="ftp'eirb">
+    <meta name="twitter:description"
+        content="Console d'administration des sites web et services hébergés par Eirbware">
+    <meta name="twitter:image" content="https://ftp-eirb.aboin.fr/img/banner.jpg">
+</head>
+
+<body>
+    <div id="app" class="hidden-until-load">
+        <nav class="navbar navbar-default navbar-static-top">
+            <div class="container">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                        aria-expanded="false" aria-controls="navbar">
+                        <span class="sr-only">Afficher la navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="/">FTP'EIRB</a>
+                </div>
+                <div id="navbar" class="navbar-collapse collapse">
+                    <ul class="nav navbar-nav navbar-right">
+                        <li class="dropdown" v-if="user">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                                aria-expanded="false"><span class="material-symbols-outlined">person</span>
+                                {{user.first_name}} {{user.last_name}} <span class="caret"></span> </a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li class="dropdown-header">Fonctionnalités</li>
+                                <li><a href="#accesses"><span
+                                            class="material-symbols-outlined">admin_panel_settings</span> Mes sites
+                                        web</a></li>
+                                <li class="divider"></li>
+                                <li v-if="user.admin" class="dropdown-header">Administration</li>
+                                <li v-if="user.admin"><a href="#users"><span
+                                            class="material-symbols-outlined">group</span>
+                                        Utilisateurs</a></li>
+                                <li v-if="user.admin"><a href="#sites"><span
+                                            class="material-symbols-outlined">web</span>
+                                        Sites web</a>
+                                </li>
+                                <li v-if="user.admin" class="divider"></li>
+                                <li><a href="#" @click.prevent="logout"><span
+                                            class="material-symbols-outlined">logout</span>
+                                        Déconnexion</a>
+                                </li>
+
+                            </ul>
+                        </li>
+                        <li v-else>
+                            <a href="#" @click.exact="login" @click.ctrl="loginAs"><span
+                                    class="material-symbols-outlined">login</span>
+                                Connexion</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+
+        <div class="container">
+
+            <div class="jumbotron">
+                <h1><span class="material-symbols-outlined"
+                        style="font-size: 72px; margin-right: 12px;">folder_open</span>FTP'EIRB</h1>
+                <p>Console d'administration des sites web et services hébergés par Eirbware</p>
+            </div>
+
+            <div v-if="user && sites">
+
+                <!-- Access Modal -->
+                <div class="modal fade" id="accessModal" data-backdrop="static" data-keyboard="false">
+                    <div class="modal-dialog">
+                        <div class="modal-content" v-if="activeAccess">
+                            <div class="modal-body">
+                                <form class="form-horizontal">
+                                    <fieldset>
+                                        <legend>
+                                            <span class="material-symbols-outlined">lock_clock</span>
+                                            Accès FTP au site "{{activeAccess.name}}"
+                                        </legend>
+                                        <div class="form-group">
+                                            <label for="inputHost" class="col-lg-3 control-label">Hôte FTP</label>
+                                            <div class="col-lg-9">
+                                                <div class="input-group">
+                                                    <input class="form-control" type="text" id="inputHost"
+                                                        :value="'ftp.eirb.fr'">
+                                                    <span class="input-group-btn">
+                                                        <button class="btn btn-default" type="button"
+                                                            @click="copyToClipboard('ftp.eirb.fr')">
+                                                            <span class="material-symbols-outlined">content_copy</span>
+                                                        </button>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="inputPort" class="col-lg-3 control-label">Port FTP</label>
+                                            <div class="col-lg-9">
+                                                <div class="input-group">
+                                                    <input class="form-control" type="text" id="inputPort" :value="21">
+                                                    <span class="input-group-btn">
+                                                        <button class="btn btn-default" type="button"
+                                                            @click="copyToClipboard('21')">
+                                                            <span class="material-symbols-outlined">content_copy</span>
+                                                        </button>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="inputUser" class="col-lg-3 control-label">Utilisateur</label>
+                                            <div class="col-lg-9">
+                                                <div class="input-group">
+                                                    <input class="form-control" type="text" id="inputUser"
+                                                        :value="activeAccess.username">
+                                                    <span class="input-group-btn">
+                                                        <button class="btn btn-default" type="button"
+                                                            @click="copyToClipboard(activeAccess.username)">
+                                                            <span class="material-symbols-outlined">content_copy</span>
+                                                        </button>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="inputPassword" class="col-lg-3 control-label">Mot de
+                                                passe</label>
+                                            <div class="col-lg-9">
+                                                <div class="input-group">
+                                                    <input class="form-control" type="text" id="inputPassword"
+                                                        :value="activeAccess.password">
+                                                    <span class="input-group-btn">
+                                                        <button class="btn btn-default" type="button"
+                                                            @click="copyToClipboard(activeAccess.password)">
+                                                            <span class="material-symbols-outlined">content_copy</span>
+                                                        </button>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="well text-center hoverable"
+                                            @click="copyToClipboard('ftp://' + activeAccess.username + ':' + activeAccess.password + '@ftp.eirb.fr:21')">
+                                            ftp://{{activeAccess.username}}:{{activeAccess.password}}@ftp.eirb.fr:21
+                                        </div>
+                                    </fieldset>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Fermer</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row tall-row">
+                    <div class="col-lg-12">
+                        <h1 id="accesses"><span class="material-symbols-outlined">admin_panel_settings</span> Mes sites
+                            administrés
+                        </h1>
+                        <hr>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <table class="table table-striped table-hover ">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nom</th>
+                                    <th>Nom d'utilisateur</th>
+                                    <th>Mot de passe</th>
+                                    <th>Temps restant</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="site in sites">
+                                    <td class="align-middle">{{ site.id }}</td>
+                                    <td>{{ site.name }}</td>
+                                    <td>
+                                        <span title="Copier dans le presse-papier" class="hoverable"
+                                            @click="copyToClipboard(site.username || 'ftp-' + site.id + '-' + user.id)">
+                                            {{ site.username || "ftp-" + site.id + "-" + user.id }}
+                                        </span>
+                                    </td>
+                                    <td v-if="site.id in passwords">
+                                        <span title="Copier dans le presse-papier" class="hoverable"
+                                            @click="copyToClipboard(passwords[site.id])">
+                                            {{passwords[site.id]}}
+                                        </span>
+                                    </td>
+                                    <td v-else>{{ site.password }}</td>
+                                    <td v-if="site.expires_at && new Date(site.expires_at) > new Date()">
+                                        <div class="progress progress-striped active">
+                                            <div class="progress-bar  progress-bar-success"
+                                                v-bind:style="{width: (expirations[site.id].remaining / expirations[site.id].total * 100) + '%'}">
+                                            </div>
+                                            <div class="timer">{{ millisecondsToTime(expirations[site.id].remaining) }}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td v-else>
+                                        Accès expiré
+                                    </td>
+                                    <td>
+                                        <button v-if="site.expires_at && new Date(site.expires_at) > new Date()"
+                                            class="btn btn-primary" @click="revoque(site.access_id, site.id)"><span
+                                                class="material-symbols-outlined">delete</span> Révoquer</button>
+                                        <button v-else class="btn btn-default" @click="createAccess(site.id)"><span
+                                                class="material-symbols-outlined">add</span> Générer&nbsp;</button>
+                                    </td>
+                                </tr>
+                                <tr v-if="sites.length == 0">
+                                    <td colspan="6"><em>Vous n'avez accès à aucun site web</em></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="user && user.admin && admin">
+                <div class="row tall-row">
+                    <div class="col-lg-12">
+                        <h1><span class="material-symbols-outlined">lock</span> Espace d'administration
+                        </h1>
+                        <hr>
+                    </div>
+                </div>
+
+                <!-- User Modal -->
+                <div class="modal fade" id="userModal" tabindex="-1" data-backdrop="static" data-keyboard="false">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-body">
+                                <form class="form-horizontal">
+                                    <fieldset>
+                                        <legend v-if="activeUser._blank">Ajouter un utilisateur</legend>
+                                        <legend v-else>Modifier l'utilisateur "{{ activeUser.id }}"</legend>
+                                        <div class="form-group"><label for="inputUsername"
+                                                class="col-lg-2 control-label">Identifiant</label>
+                                            <div class="col-lg-10"><input class="form-control" id="inputUsername"
+                                                    placeholder="Entrez un identifiant CAS" type="text"
+                                                    v-model="activeUser.id" :disabled="!activeUser._blank"></div>
+                                        </div>
+                                        <div class="form-group"><label for="inputFirstname"
+                                                class="col-lg-2 control-label">Prénom</label>
+                                            <div class="col-lg-10"><input class="form-control" id="inputFirstname"
+                                                    placeholder="Entrez un prénom" type="text"
+                                                    v-model="activeUser.first_name"></div>
+                                        </div>
+                                        <div class="form-group"><label for="inputLastname"
+                                                class="col-lg-2 control-label">Nom</label>
+                                            <div class="col-lg-10"><input class="form-control" id="inputLastname"
+                                                    placeholder="Entrez un nom" type="text"
+                                                    v-model="activeUser.last_name"></div>
+                                        </div>
+                                        <div class="form-group"><label for="inputAdmin"
+                                                class="col-lg-2 control-label">Admin ?</label>
+                                            <div class="col-lg-10">
+                                                <div class="checkbox"><label for="inputAdmin"><input id="inputAdmin"
+                                                            type="checkbox" v-model="activeUser.admin">
+                                                        Utilisateur administrateur </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </fieldset>
+                                </form>
+                                <div class="alert alert-dismissible alert-danger" v-if="userMessage">
+                                    <button type="button" class="close" @click="userMessage = null">×</button>
+                                    <h4>Erreur !</h4>
+                                    <p>{{ userMessage }}</p>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Annuler</button>
+                                <button type="button" class="btn btn-primary" @click="saveUser()">Enregistrer</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- UserSites Modal -->
+                <div class="modal fade" id="userSitesModal" tabindex="-1" data-backdrop="static" data-keyboard="false">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-body">
+                                <form class="form-horizontal">
+                                    <fieldset>
+                                        <legend>Gérer les accès de l'utilisateur "{{ activeUser.id }}"</legend>
+                                    </fieldset>
+                                    <h3>
+                                        <span class="material-symbols-outlined">admin_panel_settings</span>
+                                        Sites web administrés
+                                        <div class="dropdown" style="float: right;">
+                                            <button class="btn btn-primary dropdown-toggle" type="button"
+                                                id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true"
+                                                aria-expanded="false">
+                                                <span class="material-symbols-outlined">add_box</span> Ajouter
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-right"
+                                                aria-labelledby="dropdownMenuButton">
+                                                <li
+                                                    v-for="site in admin.sites.filter(s => !admin.accesses.some(a => a.site_id == s.id && a.user_id == activeUser.id))">
+                                                    <a class="dropdown-item" href="#"
+                                                        @click.prevent="addUserSite(site.id)">{{
+                                                        site.id }}</a>
+                                                </li>
+                                                </lu>
+                                        </div>
+                                    </h3>
+                                    <table class="table table-striped table-hover ">
+                                        <thead>
+                                            <tr>
+                                                <th>Site</th>
+                                                <th>Autorisation</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr
+                                                v-for="access in admin.accesses.filter(a => a.user_id == activeUser.id)">
+                                                <td>{{ access.site_id }}</td>
+                                                <td>Autorisé par "{{ access.authorized_by }}"<br />le {{
+                                                    access.authorized_at.split(" ").join(" à ") }}</td>
+                                                <td>
+                                                    <button class="btn btn-default"
+                                                        @click.prevent="deleteUserSite(access.id, access.site_id)"><span
+                                                            class="material-symbols-outlined">delete</span>
+                                                        Supprimer</button>
+                                                </td>
+                                            </tr>
+                                            <tr
+                                                v-if="admin.accesses.filter(a => a.user_id == activeUser.id).length == 0">
+                                                <td colspan="3"><em>{{activeUser.first_name}} {{activeUser.last_name}}
+                                                        n'as accès à aucun site</em></td>
+                                        </tbody>
+                                    </table>
+                                </form>
+                                <div class="alert alert-dismissible alert-danger" v-if="userSitesMessage">
+                                    <button type="button" class="close" @click="userSitesMessage = null">×</button>
+                                    <h4>Erreur !</h4>
+                                    <p>{{ userSitesMessage }}</p>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Fermer</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-12">
+                        <h2 id="users">
+                            <span class="material-symbols-outlined">group</span>
+                            Utilisateurs
+                            <!-- Button trigger modal -->
+                            <button type="button" class="btn btn-primary" style="float: right;" @click="newUser()">
+                                <span class="material-symbols-outlined">person_add</span> Ajouter
+                            </button>
+                        </h2>
+                        <hr>
+                        <table class="table table-striped table-hover ">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Prénom</th>
+                                    <th>Nom</th>
+                                    <th class="text-center">Admin</th>
+                                    <th>Ajouté par</th>
+                                    <th class="text-center">Sites</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="user in admin.users">
+                                    <td>{{ user.id }}</td>
+                                    <td>{{ user.first_name }}</td>
+                                    <td>{{ user.last_name }}</td>
+                                    <td class="text-center"><span class="material-symbols-outlined">{{ user.admin ?
+                                            "check_box" : "check_box_outline_blank" }}</span></td>
+                                    <td>{{ user.added_by ? user.added_by : "∅" }}</td>
+                                    <td class="text-center">{{ admin.accesses.filter(a => a.user_id == user.id).length
+                                        }} <button class="btn btn-default" @click="editUserSites(user)"><span
+                                                class="material-symbols-outlined">settings</span></button></td>
+                                    <td>
+                                        <button class="btn btn-primary" @click="editUser(user)"><span
+                                                class="material-symbols-outlined">edit</span> Modifier</button>
+                                        <button class="btn btn-default" @click="deleteUser(user.id)"><span
+                                                class="material-symbols-outlined">delete</span> Supprimer</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Site Modal -->
+                <div class="modal fade" id="siteModal" tabindex="-1" data-backdrop="static" data-keyboard="false">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-body">
+                                <form class="form-horizontal">
+                                    <fieldset>
+                                        <legend v-if="activeSite._blank">Ajouter un site</legend>
+                                        <legend v-else>Modifier le site "{{ activeSite.id }}"</legend>
+                                        <div class="form-group"><label for="inputId"
+                                                class="col-lg-2 control-label">Identifiant</label>
+                                            <div class="col-lg-10"><input class="form-control" id="inputId"
+                                                    placeholder="Entrez un identifiant" type="text"
+                                                    v-model="activeSite.id" :disabled="!activeSite._blank"></div>
+                                        </div>
+                                        <div class="form-group"><label for="inputName"
+                                                class="col-lg-2 control-label">Nom</label>
+                                            <div class="col-lg-10"><input class="form-control" id="inputName"
+                                                    placeholder="Entrez un nom" type="text" v-model="activeSite.name">
+                                            </div>
+                                        </div>
+                                        <div class="form-group"><label for="inputUid"
+                                                class="col-lg-2 control-label">UID</label>
+                                            <div class="col-lg-10"><input class="form-control" id="inputUid"
+                                                    placeholder="Généré automatiquement" type="text"
+                                                    v-model="activeSite.uid" :disabled="true">
+                                            </div>
+                                        </div>
+                                        <div class="form-group"><label for="inputDir"
+                                                class="col-lg-2 control-label">Répertoire</label>
+                                            <div class="col-lg-10"><input class="form-control" id="inputDir"
+                                                    placeholder="Généré automatiquement" type="text"
+                                                    v-model="activeSite.dir" :disabled="true"></div>
+                                        </div>
+                                    </fieldset>
+                                </form>
+                                <div class="alert alert-dismissible alert-danger" v-if="siteMessage">
+                                    <button type="button" class="close" @click="siteMessage = null">×</button>
+                                    <h4>Erreur !</h4>
+                                    <p>{{ siteMessage }}</p>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Annuler</button>
+                                <button type="button" class="btn btn-primary" @click="saveSite()">Enregistrer</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-12">
+                        <h2 id="sites">
+                            <span class="material-symbols-outlined">web</span>
+                            Sites web
+                            <!-- Button trigger modal -->
+                            <button type="button" class="btn btn-primary" style="float: right;" @click="newSite()">
+                                <span class="material-symbols-outlined">create_new_folder</span> Ajouter
+                            </button>
+                        </h2>
+                        <hr>
+                        <table class="table table-striped table-hover ">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nom</th>
+                                    <th>UID</th>
+                                    <th>Emplacement</th>
+                                    <th>Administrateurs</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="site in admin.sites">
+                                    <td>{{ site.id }}</td>
+                                    <td>{{ site.name }}</td>
+                                    <td>{{ site.uid }}</td>
+                                    <td>{{ site.dir }}</td>
+                                    <td>{{ admin.accesses.filter(a => a.site_id == site.id)
+                                        .map(a => a.user_id).join(', ') }}</td>
+                                    <td>
+                                        <button class="btn btn-primary" @click="editSite(site)"><span
+                                                class="material-symbols-outlined">edit</span> Modifier</button>
+                                        <button class="btn btn-default" @click="deleteSite(site.id)"><span
+                                                class="material-symbols-outlined">delete</span> Supprimer</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Modal -->
+            <div class="modal fade" id="errorModal">
+                <div class="modal-dialog">
+                    <div class="modal-content" v-if="error">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                            <h4 class="modal-title text-danger">{{error.title}}</h4>
+                        </div>
+                        <div class="modal-body">
+                            <p class="text-danger" v-html="error.message.replace(/\n/g, '<br>')"></p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Fermer</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Confirm Modal -->
+            <div class="modal fade" id="confirmModal">
+                <div class="modal-dialog">
+                    <div class="modal-content" v-if="confirm">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                            <h4 class="modal-title text-warning">{{confirm.title}}</h4>
+                        </div>
+                        <div class="modal-body">
+                            <p class="text-warning" v-html="confirm.message.replace(/\n/g, '<br>')"></p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Annuler</button>
+                            <button type="button" class="btn btn-warning" data-dismiss="modal"
+                                @click="confirm.callback">Confirmer</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row tall-row">
+                <div class="col-md-12">
+                    <p>Eirbware &copy; 2022 - Thème Bootstrap par <a href="//brobin.me">Tobin Brown</a></p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+
+    <script type="module">
+        import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js'
+
+        const blankUser = {
+            _blank: true,
+            id: "",
+            first_name: "",
+            last_name: "",
+            admin: false,
+        }
+
+        const blankSite = {
+            _blank: true,
+            id: "",
+            name: "",
+            uid: "",
+            dir: "",
+        }
+
+        createApp({
+            data() {
+                return {
+                    user: undefined,
+                    sites: undefined,
+                    passwords: {},
+                    timer: undefined,
+                    expirations: {},
+                    activeAccess: null,
+                    admin: undefined,
+                    activeUser: JSON.parse(JSON.stringify(blankUser)),
+                    userMessage: null,
+                    activeSite: JSON.parse(JSON.stringify(blankSite)),
+                    siteMessage: null,
+                    error: null,
+                    confirm: null,
+                    userSitesMessage: null,
+                }
+            },
+            watch: {
+                sites: function (sites) {
+                    if (this.timer) {
+                        clearInterval(this.timer)
+                    }
+                    this.updateExpirations();
+                    this.timer = setInterval(() => {
+                        this.updateExpirations();
+                    }, 1000)
+                },
+                "activeSite.id": function (id) {
+                    if (id) {
+                        this.activeSite.uid = "www-" + id;
+                        this.activeSite.dir = "/srv/web/sites/" + id;
+                    } else {
+                        this.activeSite.uid = "";
+                        this.activeSite.dir = "";
+                    }
+                },
+            },
+            methods: {
+                errorModal(title, message) {
+                    this.error = {
+                        title: title,
+                        message: message
+                    }
+                    $('#errorModal').modal('show')
+                },
+                confirmModal(title, message, callback) {
+                    this.confirm = {
+                        title: title,
+                        message: message,
+                        callback: callback
+                    }
+                    $('#confirmModal').modal('show')
+                },
+                editUserSites(user) {
+                    this.activeUser = JSON.parse(JSON.stringify(user))
+                    $('#userSitesModal').modal('show')
+                },
+                addUserSite(siteId) {
+                    this.confirmModal("Ajouter un accès", `Voulez-vous vraiment donner l'accès au site "${siteId}" à l'utilisateur ${this.activeUser.id} ?`, () => {
+                        fetch(`/api/admin/accesses`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                user_id: this.activeUser.id,
+                                site_id: siteId,
+                            })
+                        })
+                            .then(response => response.json())
+                            .then(responseData => {
+                                if (responseData.status === 'success') {
+                                    this.getAdminData();
+                                    if (this.activeUser.id === this.user.id) {
+                                        this.getUserData();
+                                    }
+                                } else {
+                                    this.userSitesMessage = responseData.message;
+                                }
+                            });
+                    })
+                },
+                deleteUserSite(accessId, siteId) {
+                    this.confirmModal("Supprimer un accès", `Voulez-vous vraiment supprimer l'accès de l'utilisateur ${this.activeUser.id} au site "${siteId}" ?`, () => {
+                        fetch(`/api/admin/accesses/${accessId}`, {
+                            method: 'DELETE'
+                        })
+                            .then(response => response.json())
+                            .then(responseData => {
+                                if (responseData.status === 'success') {
+                                    this.getAdminData();
+                                    if (this.activeUser.id === this.user.id) {
+                                        this.getUserData();
+                                    }
+                                } else {
+                                    this.userSitesMessage = responseData.message;
+                                }
+                            });
+                    })
+                },
+                newUser() {
+                    this.activeUser = JSON.parse(JSON.stringify(blankUser));
+                    this.userMessage = null;
+                    $('#userModal').modal('show');
+                },
+                editUser(user) {
+                    this.activeUser = JSON.parse(JSON.stringify(user));
+                    this.userMessage = null;
+                    $('#userModal').modal('show');
+                },
+                saveUser() {
+                    if (this.activeUser._blank) {
+                        fetch('/api/admin/users', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(this.activeUser)
+                        })
+                            .then(response => response.json())
+                            .then(responseData => {
+                                if (responseData.status === 'success') {
+                                    this.getAdminData();
+                                    $('#userModal').modal('hide');
+                                } else {
+                                    this.userMessage = responseData.message;
+                                }
+                            });
+                    } else {
+                        fetch('/api/admin/users/' + this.activeUser.id, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(this.activeUser)
+                        })
+                            .then(response => response.json())
+                            .then(responseData => {
+                                if (responseData.status === 'success') {
+                                    this.getAdminData();
+                                    $('#userModal').modal('hide');
+                                } else {
+                                    this.userMessage = responseData.message;
+                                }
+                            });
+                    }
+                },
+                deleteUser(userId) {
+                    this.confirmModal("Suppression de l'utilisateur", `Êtes-vous sûr de vouloir supprimer l'utilisateur "${userId}" ?`, () => {
+                        fetch('/api/admin/users/' + userId, {
+                            method: 'DELETE',
+                        })
+                            .then(response => response.json())
+                            .then(responseData => {
+                                if (responseData.status === 'success') {
+                                    this.getAdminData();
+                                } else {
+                                    this.errorModal("Erreur lors de la suppression de l'utilisateur", responseData.message);
+                                }
+                            });
+                    });
+                },
+                newSite() {
+                    this.activeSite = JSON.parse(JSON.stringify(blankSite));
+                    this.siteMessage = null;
+                    $('#siteModal').modal('show');
+                },
+                editSite(site) {
+                    this.activeSite = JSON.parse(JSON.stringify(site));
+                    this.siteMessage = null;
+                    $('#siteModal').modal('show');
+                },
+                saveSite() {
+                    if (this.activeSite._blank) {
+                        fetch('/api/admin/sites', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(this.activeSite)
+                        })
+                            .then(response => response.json())
+                            .then(responseData => {
+                                if (responseData.status === 'success') {
+                                    this.getAdminData();
+                                    $('#siteModal').modal('hide');
+                                } else {
+                                    this.siteMessage = responseData.message;
+                                }
+                            });
+                    } else {
+                        fetch('/api/admin/sites/' + this.activeSite.id, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(this.activeSite)
+                        })
+                            .then(response => response.json())
+                            .then(responseData => {
+                                if (responseData.status === 'success') {
+                                    this.getAdminData();
+                                    $('#siteModal').modal('hide');
+                                } else {
+                                    this.siteMessage = responseData.message;
+                                }
+                            });
+                    }
+                },
+                deleteSite(siteId) {
+                    this.confirmModal("Suppression du site", `Êtes-vous sûr de vouloir supprimer le site "${siteId}" ?`, () => {
+                        fetch('/api/admin/sites/' + siteId, {
+                            method: 'DELETE',
+                        })
+                            .then(response => response.json())
+                            .then(responseData => {
+                                if (responseData.status === 'success') {
+                                    this.getAdminData();
+                                } else {
+                                    this.errorModal("Erreur lors de la suppression du site", responseData.message);
+                                }
+                            });
+                    });
+                },
+                updateExpirations() {
+                    this.expirations = {}
+                    if (this.sites) {
+                        for (const site of this.sites) {
+                            if (site.expires_at) {
+                                const expiration = new Date(site.expires_at)
+                                const now = new Date()
+                                const creation = new Date(site.created_at)
+                                const diff = expiration - now
+                                const diffCreation = expiration - creation
+                                if (diff > 0) {
+                                    this.expirations[site.id] = {
+                                        total: diffCreation,
+                                        remaining: diff
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                millisecondsToTime(milliseconds) {
+                    const seconds = Math.floor(milliseconds / 1000)
+                    const minutes = Math.floor(seconds / 60)
+                    return `${minutes}:${("0" + (seconds % 60)).slice(-2)}`
+                },
+                getUserData() {
+                    fetch('/api/all')
+                        .then(response => response.json())
+                        .then(responseData => {
+                            if (responseData.status === 'success') {
+                                this.sites = responseData.data;
+                            } else {
+                                this.errorModal("Erreur lors de la récupération des sites", responseData.message);
+                            }
+                        });
+                },
+                getAdminData() {
+                    fetch('/api/admin')
+                        .then(response => response.json())
+                        .then(responseData => {
+                            if (responseData.status === 'success') {
+                                this.admin = responseData.data;
+                            } else {
+                                this.errorModal("Erreur lors de la récupération des données administratives", responseData.message);
+                            }
+                        });
+                },
+                login(event) {
+                    event.preventDefault();
+
+                    this.confirmModal("Confidentialité", `En vous connectant, vous acceptez que vos données personnelles soient traitées par Eirbware.
+
+Nous recueillons:
+• Votre identifiant de connexion au CAS de l'ENSEIRB-MATMECA
+
+Ces données sont utilisées dans le seul but de pouvoir fournir le service que vous utilisez, et seuls les membres d'Eirbware peuvent accéder à ces données.
+
+À tout moment, vous pouvez demander la suppression ou bien la modification de vos informations en nous envoyant un mail à <a href="mailto:eirbware@enseirb-matmeca.fr" class="text-warning">eirbware@enseirb-matmeca.fr</a>
+
+Les données récoltées seront supprimées à la fin de votre scolarité.`, () => {
+                        const redirectUrl = window.location.href;
+                        window.location.href = `/api/auth/redirect?redirectUrl=${redirectUrl}`;
+                    });
+                },
+                loginAs(event) {
+                    event.preventDefault();
+
+                    const username = prompt('Username:');
+
+                    fetch('/api/auth/loginDev?username=' + username)
+                        .then(response => response.json())
+                        .then(responseData => {
+                            if (responseData.status === 'success') {
+                                this.user = responseData.data;
+                                this.getUserData();
+                                if (this.user.admin) {
+                                    this.getAdminData();
+                                }
+                            } else {
+                                this.errorModal("Erreur lors de la connexion", responseData.message);
+                            }
+                        });
+                },
+                logout() {
+                    this.confirmModal("Déconnexion", `Êtes-vous sûr de vouloir vous déconnecter ?\n\nPar mesure de sécurité, toutes les sessions FTP actives seront fermées, veuillez donc vous assurer que votre transfert est terminé avant de vous déconnecter.`, () => {
+                        fetch('/api/auth/logout')
+                            .then(response => response.json())
+                            .then(responseData => {
+                                if (responseData.status === 'success') {
+                                    this.user = undefined;
+                                    this.sites = undefined;
+                                    this.admin = undefined;
+                                } else {
+                                    this.errorModal("Erreur lors de la déconnexion", responseData.message);
+                                }
+                            });
+                    });
+                },
+                createAccess(siteId) {
+                    fetch('/api/accesses', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            site_id: siteId
+                        })
+                    })
+                        .then(response => response.json())
+                        .then(responseData => {
+                            if (responseData.status === 'success') {
+                                this.getUserData();
+                                this.passwords[siteId] = responseData.data.password;
+                                this.activeAccess = {
+                                    ...responseData.data,
+                                    name: siteId
+                                };
+                                $('#accessModal').modal('show');
+                            } else {
+                                this.errorModal("Erreur lors de la création de l'accès", responseData.message);
+                            }
+                        });
+                },
+                revoque(accessId, siteId) {
+                    this.confirmModal("Révocation de l'accès", `Êtes-vous sûr de vouloir révoquer l'accès au site "${siteId}" ?\n\nSi vous avez une session FTP en cours, elle sera interrompue.`, () => {
+                        fetch('/api/accesses/' + accessId, {
+                            method: 'DELETE'
+                        })
+                            .then(response => response.json())
+                            .then(responseData => {
+                                if (responseData.status === 'success') {
+                                    this.getUserData();
+                                    delete this.passwords[siteId];
+                                } else {
+                                    this.errorModal("Erreur lors de la révocation de l'accès", responseData.message);
+                                }
+                            });
+                    });
+                },
+                copyToClipboard(text) {
+                    const el = document.createElement('textarea');
+                    el.style.position = 'absolute';
+                    el.style.left = '-9999px';
+                    el.value = text;
+                    document.body.appendChild(el);
+                    el.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(el);
+                },
+            },
+            created() {
+                // Extract payload from GET param
+                const urlParams = new URLSearchParams(window.location.search);
+                const token = urlParams.get("token");
+                const ticket = urlParams.get("ticket");
+                if (token && ticket) {
+                    window.history.replaceState({}, document.title, "/");
+                    this.authLoading = true;
+                    fetch(`/api/auth/verify?ticket=${ticket}&token=${token}`)
+                        .then((response) => {
+                            response.json().then((responseData) => {
+                                if (responseData.status === "success") {
+                                    this.user = responseData.data;
+                                    this.getUserData();
+                                    if (this.user.admin) {
+                                        this.getAdminData();
+                                    }
+                                } else {
+                                    this.errorModal("Erreur lors de la connexion", responseData.message);
+                                }
+                                document.querySelectorAll(".hidden-until-load").forEach(el => {
+                                    el.classList.remove("hidden-until-load")
+                                })
+                            });
+                        });
+                } else {
+                    // Check if the user is connected
+                    fetch('/api/auth/user')
+                        .then(response => response.json())
+                        .then(responseData => {
+                            if (responseData.status === 'success') {
+                                this.user = responseData.data;
+                                this.getUserData();
+                                if (this.user.admin) {
+                                    this.getAdminData();
+                                }
+                            } else {
+                                this.user = null
+                            }
+                            document.querySelectorAll(".hidden-until-load").forEach(el => {
+                                el.classList.remove("hidden-until-load")
+                            })
+                        });
+                }
+            },
+        }).mount('#app')
+    </script>
+
+</body>
+
+</html>

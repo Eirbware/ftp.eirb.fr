@@ -1,0 +1,94 @@
+* {
+    scroll-behavior: smooth;
+}
+
+.tall-row {
+    margin-top: 40px;
+}
+
+.azemodal {
+    position: relative;
+    top: auto;
+    right: auto;
+    left: auto;
+    bottom: auto;
+    z-index: 1;
+    display: block;
+}
+
+.material-symbols-outlined {
+    line-height: 10px;
+    vertical-align: middle;
+}
+
+h1>.material-symbols-outlined {
+    vertical-align: sub;
+    font-size: 42px;
+}
+
+h2>.material-symbols-outlined {
+    vertical-align: sub;
+    font-size: 32px;
+}
+
+h3>.material-symbols-outlined {
+    vertical-align: sub;
+    font-size: 28px;
+}
+
+.hidden-until-load {
+    display: none !important;
+}
+
+.progress {
+    position: relative;
+    margin: auto;
+}
+
+.timer {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    color: white;
+}
+
+td {
+    vertical-align: middle !important;
+}
+
+:target {
+    scroll-margin-top: 70px;
+}
+
+nav {
+    position: sticky !important;
+    top: 0;
+}
+
+.hoverable {
+    cursor: pointer;
+}
+
+.hoverable:hover::after {
+    content: "content_copy";
+    position: absolute;
+    margin-left: 5px;
+
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+}
