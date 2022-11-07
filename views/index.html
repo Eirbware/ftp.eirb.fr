@@ -81,7 +81,7 @@
                             </ul>
                         </li>
                         <li v-else>
-                            <a href="#" @click.exact="login" @click.ctrl="loginAs"><span
+                            <a href="#" @click.exact="login"><span
                                     class="material-symbols-outlined">login</span>
                                 Connexion</a>
                         </li>
@@ -881,25 +881,6 @@ Les données récoltées seront supprimées à la fin de votre scolarité.`, () 
                         const redirectUrl = window.location.href;
                         window.location.href = `/api/auth/redirect?redirectUrl=${redirectUrl}`;
                     });
-                },
-                loginAs(event) {
-                    event.preventDefault();
-
-                    const username = prompt('Username:');
-
-                    fetch('/api/auth/loginDev?username=' + username)
-                        .then(response => response.json())
-                        .then(responseData => {
-                            if (responseData.status === 'success') {
-                                this.user = responseData.data;
-                                this.getUserData();
-                                if (this.user.admin) {
-                                    this.getAdminData();
-                                }
-                            } else {
-                                this.errorModal("Erreur lors de la connexion", responseData.message);
-                            }
-                        });
                 },
                 logout() {
                     this.confirmModal("Déconnexion", `Êtes-vous sûr de vouloir vous déconnecter ?\n\nPar mesure de sécurité, toutes les sessions FTP actives seront fermées, veuillez donc vous assurer que votre transfert est terminé avant de vous déconnecter.`, () => {

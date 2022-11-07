@@ -35,7 +35,6 @@ SimpleRouter::group(['prefix' => '/api'], function () {
         SimpleRouter::get('/cas', 'AuthController@cas');
         SimpleRouter::get('/success', 'AuthController@success');
         SimpleRouter::get('/verify', 'AuthController@verify');
-        SimpleRouter::get('/loginDev', 'AuthController@loginDev');
     });
 
     // Authenticated routes

@@ -155,21 +155,4 @@ class AuthController
             'data' => request()->user
         ], JSON_PRETTY_PRINT);
     }
-
-    public static function loginDev()
-    {
-        $username = input()->get("username", null);
-
-        // One of the required parameters is missing
-        if ($username === null) {
-            response()->httpCode(401);
-            response()->json([
-                'status' => 'error',
-                'message' => "Le paramètre 'username' est manquant !",
-                'code' => 'MISSING_PARAMETER'
-            ], JSON_PRETTY_PRINT);
-        }
-
-        return self::loginAs($username);
-    }
 }
