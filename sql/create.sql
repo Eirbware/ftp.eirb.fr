@@ -44,7 +44,7 @@ CREATE PROCEDURE get_password(IN username VARCHAR(100))
 
 CREATE PROCEDURE get_uid(IN username VARCHAR(100))
     SELECT uid FROM temp_access tmp 
-    JOIN admins ON tmp.access_id = users_sites.id 
+    JOIN users_sites ON tmp.access_id = users_sites.id
     JOIN sites ON users_sites.site_id = sites.id 
     WHERE tmp.username = username
     AND tmp.expires_at >= NOW();
@@ -54,7 +54,7 @@ CREATE PROCEDURE get_gid(IN username VARCHAR(100))
 
 CREATE PROCEDURE get_dir(IN username VARCHAR(100))
     SELECT dir FROM temp_access tmp 
-    JOIN admins ON tmp.access_id = users_sites.id 
+    JOIN users_sites ON tmp.access_id = users_sites.id
     JOIN sites ON users_sites.site_id = sites.id 
     WHERE tmp.username = username
     AND tmp.expires_at >= NOW();

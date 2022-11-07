@@ -54,6 +54,7 @@ namespace Services {
                 try {
                     $pdo = new \PDO("mysql:host=$MYSQL_DB_HOST;port=$MYSQL_DB_PORT;dbname=$MYSQL_DB_NAME", $MYSQL_DB_USERNAME, $MYSQL_DB_PASSWORD);
                     $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+                    date_default_timezone_set("UTC");
                     self::$pdo = $pdo;
                 } catch (\PDOException $e) {
                     if (php_sapi_name() === "cli") {

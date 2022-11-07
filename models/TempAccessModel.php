@@ -53,6 +53,7 @@ namespace Models {
         public static function create($access_id, $username, $password, $expires_after): ?TempAccess
         {
             $db = Database::getInstance();
+            $db->query("SET time_zone = '+00:00'");
             $stmt = $db->prepare("INSERT INTO temp_access (access_id, username, password, expires_at) VALUES (:access_id, :username, :password, DATE_ADD(NOW(), INTERVAL :expires_after MINUTE))");
             $stmt->bindParam(":access_id", $access_id);
             $stmt->bindParam(":username", $username);
