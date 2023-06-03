@@ -6,7 +6,24 @@
         "league/climate": "^3.8"
     },
     "scripts": {
-        "start": "php -S 127.0.0.1:8080 -t public_html"
+        "start": "php -S 127.0.0.1:8080 -t public_html",
+        "db-create": "php api/console.php db:create",
+        "db-drop": "php api/console.php db:drop",
+        "lint": "vendor/bin/phpstan analyse -c phpstan.neon"
+    },
+    "scripts-descriptions": {
+        "start": "Starts the PHP built-in web server on port 8080",
+        "db-create": "Creates the database and create a user or seed with demo data",
+        "db-drop": "Drops the database",
+        "lint": "Runs PHPStan to check for errors"
+    },
+    "autoload": {
+        "psr-4": {"FtpEirb\\": "api/"},
+        "files": ["api/helpers.php"]
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^1.9",
+        "phpunit/phpunit": "^9.5"
     },
     "config": {
         "process-timeout": 0
