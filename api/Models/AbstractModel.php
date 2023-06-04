@@ -47,8 +47,7 @@ abstract class AbstractModel
      */
     public static function getTableName()
     {
-        $prefix = Database::getPrefix();
-        return $prefix . static::$tableName;
+        return static::$tableName;
     }
 
     /**

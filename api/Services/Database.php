@@ -21,12 +21,6 @@ class Database
      */
     private static $pdo;
 
-    /**
-     * The prefix of the database tables
-     * @var string
-     */
-    private static $prefix = "";
-
     private static function init(): void
     {
         if (self::$isInitialized) {
@@ -44,7 +38,6 @@ class Database
             $dotenv->required("MYSQL_DB_USERNAME")->notEmpty();
             $dotenv->required("MYSQL_DB_PASSWORD")->notEmpty();
             $dotenv->required("MYSQL_DB_NAME")->notEmpty();
-            $dotenv->ifPresent("MYSQL_DB_PREFIX")->notEmpty();
             $dotenv->required("ACCESS_DURATION")->isInteger();
         } catch (Exception $e) {
             if (php_sapi_name() === "cli") {
@@ -60,7 +53,6 @@ class Database
         $username = $_ENV["MYSQL_DB_USERNAME"];
         $password = $_ENV["MYSQL_DB_PASSWORD"];
         $databaseName = $_ENV["MYSQL_DB_NAME"];
-        self::$prefix = isset($_ENV["MYSQL_DB_PREFIX"]) ? $_ENV["MYSQL_DB_PREFIX"] : "";
 
         if (
             empty($host) ||
@@ -108,14 +100,5 @@ class Database
         }
 
         return self::$pdo;
-    }
-
-    public static function getPrefix(): string
-    {
-        if (!self::$isInitialized) {
-            self::init();
-        }
-
-        return self::$prefix;
     }
 }

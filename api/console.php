@@ -83,8 +83,8 @@ class FtpEirbCli extends CLI
                 $dbPort = $input->prompt();
 
                 /** @var \League\CLImate\TerminalObject\Dynamic\Input $input */
-                $input = $climate->input('- Enter the FTP session duration in minutes (default: 30):');
-                $input->defaultTo('30');
+                $input = $climate->input('- Enter the FTP session duration in minutes (default: 10):');
+                $input->defaultTo('10');
                 $accessDuration = $input->prompt();
 
                 $this->info("Creating .env file...");
@@ -122,7 +122,7 @@ class FtpEirbCli extends CLI
         $db->exec($sql);
         $this->success('Database schema created successfully !');
 
-        $options  = ['Create default admin user', 'Seed database with test data', 'Exit'];
+        $options  = ['Create default admin user', 'Exit'];
         /** @var \League\CLImate\TerminalObject\Dynamic\Radio $input */
         $input    = $climate->radio('What do you want to do next?', $options);
         $response = $input->prompt();
@@ -146,20 +146,12 @@ class FtpEirbCli extends CLI
             $user->first_name = $firstName;
             $user->last_name = $lastName;
             $user->admin = true;
-            if ($user->save()) {
+            $user->save();
+            if (FtpEirb\Models\User::getById($id)) {
                 $this->success('User created successfully !');
             } else {
                 $this->error('An error occured while creating the user !');
             }
-        } elseif ($response === $options[1]) {
-            $this->info('Seeding database with test data...');
-            $sql = file_get_contents(__DIR__ . '/sql/seed.sql');
-            if (!$sql) {
-                $this->error('Unable to read the file ' . __DIR__ . '/Sql/seed.sql');
-                exit(1);
-            }
-            $db->exec($sql);
-            $this->success('Database seeded successfully !');
         }
         exit;
     }
