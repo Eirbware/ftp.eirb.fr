@@ -6,7 +6,6 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use Exception;
 use Pecee\SimpleRouter\SimpleRouter as Router;
-use FtpEirb\Controllers\PageController;
 use FtpEirb\Middlewares\AuthMiddleware;
 use FtpEirb\Middlewares\AdminMiddleware;
 

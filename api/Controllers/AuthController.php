@@ -4,6 +4,7 @@ namespace FtpEirb\Controllers;
 
 use FtpEirb\Models\TempAccess;
 use FtpEirb\Models\User;
+use FtpEirb\Models\UserSite;
 
 class AuthController
 {
@@ -53,7 +54,7 @@ class AuthController
     private static function loginAs(string $username): bool
     {
         // We check if the user exists in the database
-        $user = User::get($username);
+        $user = User::getById($username);
 
         if ($user !== null) {
             $userData = [
@@ -117,7 +118,13 @@ class AuthController
     public static function logout(): bool
     {
         // We delete all active accesses
-        TempAccess::deleteAllForUser($_SESSION['user']['id']);
+        $userSites = UserSite::getAllByFields(["user_id" => $_SESSION['user']['id']]);
+        TempAccess::deleteAllByFieldIn(
+            "access_id",
+            array_map(function ($userSite) {
+                return $userSite->id;
+            }, $userSites)
+        );
 
         // We remove the user's login from the session
         unset($_SESSION['user']);

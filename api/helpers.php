@@ -120,13 +120,6 @@ function error(string $message, string $code, int $status = 400, $errors = null)
  */
 function logError($message)
 {
-    // Log to file
-    $date = date('Y-m-d H:i:s');
-    $file = fopen(__DIR__ . '/../errors.log', 'a');
-    if ($file) {
-        fwrite($file, "[$date] $message" . PHP_EOL);
-        fclose($file);
-    }
     error_log("\e[0;31;41m ERROR \e[0m " . $message);
 }
 
@@ -146,13 +139,5 @@ function logSuccess($message)
  */
 function logInfo($message, $toFile = false)
 {
-    if ($toFile) {
-        $date = date('Y-m-d H:i:s');
-        $file = fopen(__DIR__ . '/../info.log', 'a');
-        if ($file) {
-            fwrite($file, "[$date] $message" . PHP_EOL);
-            fclose($file);
-        }
-    }
     error_log("\e[1;37;44m INFO \e[0m " . $message);
 }

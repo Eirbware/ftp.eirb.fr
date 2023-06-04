@@ -2,7 +2,9 @@
 
 namespace FtpEirb\Services;
 
+use FtpEirb\Models\Site;
 use FtpEirb\Models\User;
+use FtpEirb\Models\UserSite;
 
 class Authentication
 {
@@ -25,7 +27,7 @@ class Authentication
     public static function getCurrentUser()
     {
         if (self::$user == null && isset($_SESSION["user"])) {
-            self::$user = User::get($_SESSION["user"]["id"]);
+            self::$user = User::getById($_SESSION["user"]["id"]);
         }
         return self::$user;
     }
@@ -43,14 +45,15 @@ class Authentication
 
     /**
      * Get the current user's sites
-     * 
+     *
      * @return array<\FtpEirb\Models\Site>
      */
     public static function listSites()
     {
         $currentUser = self::getCurrentUser();
         if ($currentUser != null) {
-            return $currentUser->getSites();
+            $user_sites = UserSite::getAllByFields(["user_id" => $currentUser->id]);
+            return Site::getAllByFieldIn("id", array_map(fn ($user_site) => $user_site->site_id, $user_sites));
         }
         return [];
     }

@@ -11,14 +11,16 @@ class DashboardController
 {
     public static function listSites(): bool
     {
-        $sites = Site::getAllForUser(AuthController::$user->id);
+        $user_sites = UserSite::getAllByFields(["user_id" => AuthController::$user->id]);
+        $sites = Site::getAllByFieldIn("id", array_map(fn ($user_site) => $user_site->site_id, $user_sites));
 
         return success("Liste des sites", "SITE/LIST", $sites);
     }
 
     public static function listAccesses(): bool
     {
-        $accesses = TempAccess::getAllForUser(AuthController::$user->id);
+        $userSites = UserSite::getAllByFields(["user_id" => AuthController::$user->id]);
+        $accesses = TempAccess::getAllByFieldIn("access_id", array_map(fn ($user_site) => $user_site->id, $userSites));
 
         return success("Liste des accès temporaires", "TEMP_ACCESS/LIST", $accesses);
     }
@@ -26,13 +28,13 @@ class DashboardController
     private static function randomPassword(): string
     {
         $alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
-        $pass = array(); //remember to declare $pass as an array
-        $alphaLength = strlen($alphabet) - 1; //put the length -1 in cache
+        $pass = array();
+        $alphaLength = strlen($alphabet) - 1;
         for ($i = 0; $i < 16; $i++) {
             $n = rand(0, $alphaLength);
             $pass[] = $alphabet[$n];
         }
-        return implode($pass); //turn the array into a string
+        return implode($pass);
     }
 
     public static function createAccess(): bool
@@ -45,17 +47,17 @@ class DashboardController
         }
 
         // We check if the user has the right to access the site
-        $access = UserSite::getFromSiteIdAndUserId($siteId, AuthController::$user->id);
+        $access = UserSite::getByFields(["site_id" => $siteId, "user_id" => AuthController::$user->id]);
 
         if ($access == null) {
             return error("Vous n'avez pas accès à ce site !", "USER_NOT_AUTHORIZED", 403);
         }
 
         // We check if the user already has a temporary access to the site
-        $tempAccess = TempAccess::get($access->id);
+        $tempAccess = TempAccess::getById($access->id);
 
         if ($tempAccess) {
-            if ($tempAccess->expires_at > date("Y-m-d H:i:s")) {
+            if ($tempAccess->expires_at > date("Y-m-d\TH:i:s")) {
                 return error("Vous avez déjà un accès temporaire à ce site !", "USER_ALREADY_HAS_ACCESS");
             } else {
                 // We delete the old temporary access
@@ -66,11 +68,20 @@ class DashboardController
         // We create a temporary access for the user
         $username = "ftp-" . $siteId . "-" . AuthController::$user->id;
         $password = self::randomPassword();
-        $expiresAfter = $_ENV["ACCESS_DURATION"];
+        $expires_after = $_ENV["ACCESS_DURATION"];
 
-        $tempAccess = TempAccess::create($access->id, $username, sodium_crypto_pwhash_scryptsalsa208sha256_str($password, SODIUM_CRYPTO_PWHASH_SCRYPTSALSA208SHA256_OPSLIMIT_INTERACTIVE, SODIUM_CRYPTO_PWHASH_SCRYPTSALSA208SHA256_MEMLIMIT_INTERACTIVE), $expiresAfter);
-        
-        if ($tempAccess == null) {
+        $db = Database::getInstance();
+        $db->query("SET time_zone = '+00:00'");
+        $stmt = $db->prepare("INSERT INTO temp_access (access_id, username, password, expires_at) VALUES (:access_id, :username, :password, DATE_ADD(NOW(), INTERVAL :expires_after MINUTE))");
+        $stmt->bindParam(":access_id", $access->id);
+        $stmt->bindParam(":username", $username);
+        $stmt->bindParam(":password", $password);
+        $stmt->bindParam(":expires_after", $expires_after);
+        $stmt->execute();
+
+        $tempAccess = TempAccess::getById($access->id);
+
+        if (!$tempAccess) {
             return error("Impossible de créer l'accès temporaire !", "ACCESS/TEMP_ACCESS_CREATION_FAILED");
         }
 
@@ -81,14 +92,14 @@ class DashboardController
 
     public static function deleteAccess(int $accessId): bool
     {
-        $access = TempAccess::get($accessId);
+        $access = TempAccess::getById($accessId);
 
         if ($access == null) {
             return error("L'accès temporaire n'existe pas !", "ACCESS/ACCESS_NOT_FOUND", 404);
         }
 
         // We check if the user has the right to access the site
-        $userSite = UserSite::get($accessId);
+        $userSite = UserSite::getById($accessId);
 
         if ($userSite == null || $userSite->user_id != AuthController::$user->id) {
             return error("Vous n'avez pas accès à ce site !", "USER_NOT_AUTHORIZED", 403);

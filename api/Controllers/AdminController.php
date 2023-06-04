@@ -5,7 +5,6 @@ namespace FtpEirb\Controllers;
 use FtpEirb\Models\Site;
 use FtpEirb\Models\User;
 use FtpEirb\Models\UserSite;
-use FtpEirb\Services\Database;
 
 class AdminController
 {
@@ -39,12 +38,12 @@ class AdminController
         }
 
         // Check that admin is a boolean
-        if ($admin === null || !is_bool($admin)) {
+        if ($admin === null) {
             return error("Le paramètre 'admin' doit être un booléen !", "INVALID_ADMIN");
         }
 
         // We check if the user already exists
-        if (User::get($id)) {
+        if (User::getById($id)) {
             return error("Un utilisateur avec l'identifiant '$id' existe déjà !", "USER_ALREADY_EXISTS");
         }
 
@@ -57,7 +56,7 @@ class AdminController
         $user->added_by = AuthController::$user->id;
 
         try {
-            $user->persist();
+            $user->save();
             return success("L'utilisateur '$id' a été créé avec succès !", "ADMIN/CREATE_USER", $user);
         } catch (\Exception $e) {
             logError($e->getMessage());
@@ -82,17 +81,17 @@ class AdminController
         }
 
         // Check that admin is a boolean
-        if ($admin === null || !is_bool($admin)) {
+        if ($admin === null) {
             return error("Le paramètre 'admin' doit être un booléen !", "INVALID_ADMIN");
         }
 
         // We check if the user is not the current user
-        if ($userId === AuthController::$user->id && $admin === false) {
+        if ($userId === AuthController::$user->id && !$admin) {
             return error("Vous ne pouvez pas vous retirer les droits d'administrateur !", "CANNOT_REMOVE_ADMIN_RIGHTS");
         }
 
         // We check if the user exists
-        $user = User::get($userId);
+        $user = User::getById($userId);
         if (!$user) {
             return error("L'utilisateur '$userId' n'existe pas !", "USER_DOES_NOT_EXIST", 404);
         }
@@ -103,7 +102,7 @@ class AdminController
         $user->admin = $admin ? true : false;
 
         try {
-            $user->update();
+            $user->save(true);
             return success("L'utilisateur '$userId' a été mis à jour avec succès !", "ADMIN/UPDATE_USER", $user);
         } catch (\Exception $e) {
             logError($e->getMessage());
@@ -119,7 +118,7 @@ class AdminController
         }
 
         // We check if the user exists
-        $user = User::get($userId);
+        $user = User::getById($userId);
 
         if (!$user) {
             return error("L'utilisateur '$userId' n'existe pas !", "USER_DOES_NOT_EXIST");
@@ -176,7 +175,7 @@ class AdminController
         }
 
         // We check if the site already exists
-        if (Site::get($id)) {
+        if (Site::getById($id)) {
             return error("Le site '$id' existe déjà !", "SITE_ALREADY_EXISTS");
         }
 
@@ -188,7 +187,7 @@ class AdminController
         $site->dir = $dir;
 
         try {
-            $site->persist();
+            $site->save();
             return success("Le site '$id' a été créé avec succès !", "ADMIN/CREATE_SITE", $site);
         } catch (\Exception $e) {
             logError($e->getMessage());
@@ -206,7 +205,7 @@ class AdminController
         }
 
         // We check if the site exists
-        $site = Site::get($siteId);
+        $site = Site::getById($siteId);
         if (!$site) {
             return error("Le site '$siteId' n'existe pas !", "SITE_DOES_NOT_EXIST");
         }
@@ -215,7 +214,7 @@ class AdminController
         $site->name = $name;
 
         try {
-            $site->update();
+            $site->save(true);
             return success("Le site '$siteId' a été mis à jour avec succès !", "ADMIN/UPDATE_SITE", $site);
         } catch (\Exception $e) {
             logError($e->getMessage());
@@ -226,7 +225,7 @@ class AdminController
     public static function deleteSite(string $siteId): bool
     {
         // We check if the site exists
-        $site = Site::get($siteId);
+        $site = Site::getById($siteId);
 
         if (!$site) {
             return error("Le site '$siteId' n'existe pas !", "SITE_DOES_NOT_EXIST");
@@ -260,31 +259,19 @@ class AdminController
         }
 
         // We check if the access, the user and the site exist
-        $sql = 'SELECT (
-            SELECT id FROM users_sites WHERE user_id = :user_id AND site_id = :site_id
-        ) AS access_id, (
-            SELECT id FROM users WHERE id = :user_id
-        ) AS user_id, (
-            SELECT id FROM sites WHERE id = :site_id
-        ) AS site_id';
-        $stmt = Database::getInstance()->prepare($sql);
+        $userSite = UserSite::getByFields(['user_id' => $userId, 'site_id' => $siteId]);
+        $user = User::getById($userId);
+        $site = Site::getById($siteId);
 
-        $stmt->bindValue(':user_id', $userId);
-        $stmt->bindValue(':site_id', $siteId);
-
-        $stmt->execute();
-
-        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
-
-        if ($result['access_id']) {
+        if ($userSite) {
             return error("L'accès au site '$siteId' pour l'utilisateur '$userId' existe déjà !", "ACCESS_ALREADY_EXISTS");
         }
 
-        if (!$result['user_id']) {
+        if (!$user) {
             return error("L'utilisateur '$userId' n'existe pas !", "USER_DOES_NOT_EXIST");
         }
 
-        if (!$result['site_id']) {
+        if (!$site) {
             return error("Le site '$siteId' n'existe pas !", "SITE_DOES_NOT_EXIST");
         }
 
@@ -296,7 +283,7 @@ class AdminController
         $access->authorized_at = date('Y-m-d H:i:s');
 
         try {
-            $access->persist();
+            $access->save();
             return success("L'accès au site '$siteId' pour l'utilisateur '$userId' a été créé avec succès !", "ADMIN/CREATE_ACCESS", $access);
         } catch (\Exception $e) {
             logError($e->getMessage());
@@ -307,7 +294,7 @@ class AdminController
     public static function deleteAccess(string $accessId): bool
     {
         // We check if the access exists
-        $access = UserSite::get($accessId);
+        $access = UserSite::getById($accessId);
 
         if (!$access) {
             return error("L'accès '$accessId' n'existe pas !", "ACCESS_DOES_NOT_EXIST");

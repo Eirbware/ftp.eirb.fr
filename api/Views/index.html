@@ -224,7 +224,7 @@
                                         </span>
                                     </td>
                                     <td v-else>{{ site.password }}</td>
-                                    <td v-if="site.expires_at && new Date(Date.parse(site.expires_at + ' UTC')) > new Date()">
+                                    <td v-if="site.expires_at && new Date(Date.parse(site.expires_at + 'Z')) > new Date()">
                                         <div class="progress progress-striped active">
                                             <div class="progress-bar  progress-bar-success"
                                                 v-bind:style="{width: (expirations[site.id].remaining / expirations[site.id].total * 100) + '%'}">
@@ -237,7 +237,7 @@
                                         Accès expiré
                                     </td>
                                     <td>
-                                        <button v-if="site.expires_at && new Date(Date.parse(site.expires_at + ' UTC')) > new Date()"
+                                        <button v-if="site.expires_at && new Date(Date.parse(site.expires_at + 'Z')) > new Date()"
                                             class="btn btn-primary" @click="revoque(site.access_id, site.id)"><span
                                                 class="material-symbols-outlined">delete</span> Révoquer</button>
                                         <button v-else class="btn btn-default" @click="createAccess(site.id)"><span
@@ -563,7 +563,7 @@
 
             <div class="row tall-row">
                 <div class="col-md-12">
-                    <p>Eirbware &copy; 2022 - Thème Bootstrap par <a href="//brobin.me">Tobin Brown</a></p>
+                    <p>Eirbware &copy; 2023 - Thème Bootstrap par <a href="//brobin.me">Tobin Brown</a></p>
                 </div>
             </div>
 
@@ -823,9 +823,9 @@
                     if (this.sites) {
                         for (const site of this.sites) {
                             if (site.expires_at) {
-                                const expiration = new Date(Date.parse(site.expires_at + ' UTC'))
+                                const expiration = new Date(Date.parse(site.expires_at + 'Z'))
                                 const now = new Date()
-                                const creation = new Date(Date.parse(site.created_at + ' UTC'))
+                                const creation = new Date(Date.parse(site.created_at + 'Z'))
                                 const diff = expiration - now
                                 const diffCreation = expiration - creation
                                 if (diff > 0) {

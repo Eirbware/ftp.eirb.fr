@@ -54,28 +54,35 @@ class FtpEirbCli extends CLI
     {
         if (!file_exists(__DIR__ . '/../.env')) {
             $this->error("The file '.env' does not exist. Please create it first.");
+            /** @var \League\CLImate\TerminalObject\Dynamic\Confirm $input */
             $input = $climate->bold()->confirm('Do you want to create it now?');
 
             if ($input->confirmed()) {
+                /** @var \League\CLImate\TerminalObject\Dynamic\Input $input */
                 $input = $climate->input('- Enter the database name (default: ftp):');
                 $input->defaultTo('ftp');
                 $dbName = $input->prompt();
 
+                /** @var \League\CLImate\TerminalObject\Dynamic\Input $input */
                 $input = $climate->input('- Enter the database user (default: ftp):');
                 $input->defaultTo('ftp');
                 $dbUser = $input->prompt();
 
+                /** @var \League\CLImate\TerminalObject\Dynamic\Input $input */
                 $input = $climate->password('- Enter the database password:');
                 $dbPassword = $input->prompt();
 
+                /** @var \League\CLImate\TerminalObject\Dynamic\Input $input */
                 $input = $climate->input('- Enter the database host (default: 127.0.0.1):');
                 $input->defaultTo('127.0.0.1');
                 $dbHost = $input->prompt();
 
+                /** @var \League\CLImate\TerminalObject\Dynamic\Input $input */
                 $input = $climate->input('- Enter the database port (default: 3306):');
                 $input->defaultTo('3306');
                 $dbPort = $input->prompt();
 
+                /** @var \League\CLImate\TerminalObject\Dynamic\Input $input */
                 $input = $climate->input('- Enter the FTP session duration in minutes (default: 30):');
                 $input->defaultTo('30');
                 $accessDuration = $input->prompt();
@@ -116,17 +123,21 @@ class FtpEirbCli extends CLI
         $this->success('Database schema created successfully !');
 
         $options  = ['Create default admin user', 'Seed database with test data', 'Exit'];
+        /** @var \League\CLImate\TerminalObject\Dynamic\Radio $input */
         $input    = $climate->radio('What do you want to do next?', $options);
         $response = $input->prompt();
 
         if ($response === $options[0]) {
             $this->info('User creation form');
+            /** @var \League\CLImate\TerminalObject\Dynamic\Input $input */
             $input = $climate->input('- Enter the id:');
             $id = $input->prompt();
 
+            /** @var \League\CLImate\TerminalObject\Dynamic\Input $input */
             $input = $climate->input('- Enter the first name:');
             $firstName = $input->prompt();
 
+            /** @var \League\CLImate\TerminalObject\Dynamic\Input $input */
             $input = $climate->input('- Enter the last name:');
             $lastName = $input->prompt();
 
@@ -135,7 +146,7 @@ class FtpEirbCli extends CLI
             $user->first_name = $firstName;
             $user->last_name = $lastName;
             $user->admin = true;
-            if ($user->persist()) {
+            if ($user->save()) {
                 $this->success('User created successfully !');
             } else {
                 $this->error('An error occured while creating the user !');
