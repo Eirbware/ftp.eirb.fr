@@ -22,8 +22,51 @@ composer install
 Après cette étape, l'installation est terminée, mais il reste à configurer le projet. Tout est expliqué dans la section suivante.
 
 \
-⚙️ Configuration
-=================
+💿️ Mise en place du serveur FTP
+================================
+
+Afin de pouvoir utiliser le projet, il est nécessaire de mettre en place un serveur FTP supportant une authentification par base de données. Pour cela, nous vous utilisons le serveur [PureFTPd](https://www.pureftpd.org/project/pure-ftpd/). 
+
+Voici un exemple de configuration pour le serveur FTP avec l'authentification par base de données :
+```ini
+# Optional : MySQL server name or IP. Don't define this for unix sockets.
+# MYSQLServer     127.0.0.1
+
+# Optional : MySQL port. Don't define this if a local unix socket is used.
+# MYSQLPort       3306
+
+# Optional : define the location of mysql.sock if the server runs on this host.
+MYSQLSocket      /var/run/mysqld/mysqld.sock
+
+# Mandatory : user to bind the server as.
+MYSQLUser       ftp
+
+# Mandatory : user password. You must have a password.
+MYSQLPassword   tH1s1s4v3ry53cr3tp4ssw0rd
+
+# Mandatory : database to open.
+MYSQLDatabase   ftp
+
+# Mandatory : how passwords are stored
+MYSQLCrypt      scrypt
+
+# Query to execute in order to fetch the password
+MYSQLGetPW      CALL get_password("\L");
+
+# Query to execute in order to fetch the system user name or uid
+MYSQLGetUID     CALL get_uid("\L");
+
+# Query to execute in order to fetch the system user group or gid
+MYSQLGetGID     CALL get_gid("\L")
+
+
+# Query to execute in order to fetch the home directory
+MYSQLGetDir     CALL get_dir("\L")
+```
+
+\
+⚙️ Configuration de l'application
+=================================
 
 Avant de pouvoir lancer le projet et l'essayer, il est nécessaire de renseigner plusieurs variables d'environnement dans un fichier de configuration `.env`, puis de créer la base de données.
 
@@ -37,9 +80,9 @@ Avant de pouvoir lancer le projet et l'essayer, il est nécessaire de renseigner
 
 ## Exemple de fichier de configuration `.env` :
 ```env
-MYSQL_DB_NAME=ftp_eirb
-MYSQL_DB_USERNAME=ftp_eirb
-MYSQL_DB_PASSWORD=ftp_eirb
+MYSQL_DB_NAME=ftp
+MYSQL_DB_USERNAME=ftp
+MYSQL_DB_PASSWORD=tH1s1s4v3ry53cr3tp4ssw0rd
 MYSQL_DB_HOST=127.0.0.1
 MYSQL_DB_PORT=3306
 ACCESS_DURATION=10
@@ -63,6 +106,11 @@ Pour lancer le projet en local à des fins de développement, il vous suffit de 
 composer start
 ```
 Il vous suffit d'aller à l'URL http://localhost:8080/ pour accéder à l'application.
+
+Afin de vider la base de données en vue de la réinitialiser, vous pouvez utiliser la commande suivante :
+```bash
+composer db-drop
+```
 
 \
 🚀️ Déploiement
