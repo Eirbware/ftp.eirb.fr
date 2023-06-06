@@ -64,6 +64,18 @@ MYSQLGetGID     CALL get_gid("\L")
 MYSQLGetDir     CALL get_dir("\L")
 ```
 
+Pour automatiser le génération du certificat TLS utilisé par pureftpd, il suffit d'ajouter un script dans `/etc/letsencrypt/renewal-hooks/deploy`, par exemple `pureftpd-cert.sh` :
+```sh
+#!/bin/bash
+
+mv /etc/ssl/private/pure-ftpd.pem{,.old}
+cat /etc/letsencrypt/live/eirb.fr/privkey.pem /etc/letsencrypt/live/eirb.fr/cert.pem > /etc/ssl/private/pure-ftpd.pem
+
+service pure-ftpd-mysql restart
+```
+
+> ⚠️ Notes : Le service à lancer est `pure-ftpd-mysql` et non pas `pure-ftpd`. Ces deux services ne lisent pas les mêmes fichiers de configurations.
+
 \
 ⚙️ Configuration de l'application
 =================================
