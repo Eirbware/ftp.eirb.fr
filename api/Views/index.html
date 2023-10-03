@@ -878,8 +878,7 @@ Ces données sont utilisées dans le seul but de pouvoir fournir le service que 
 À tout moment, vous pouvez demander la suppression ou bien la modification de vos informations en nous envoyant un mail à <a href="mailto:eirbware@enseirb-matmeca.fr" class="text-warning">eirbware@enseirb-matmeca.fr</a>
 
 Les données récoltées seront supprimées à la fin de votre scolarité.`, () => {
-                        const redirectUrl = window.location.href;
-                        window.location.href = `/api/auth/redirect?redirectUrl=${redirectUrl}`;
+                        window.location.href = `/api/auth/redirect`;
                     });
                 },
                 logout() {
@@ -952,12 +951,11 @@ Les données récoltées seront supprimées à la fin de votre scolarité.`, () 
             created() {
                 // Extract payload from GET param
                 const urlParams = new URLSearchParams(window.location.search);
-                const token = urlParams.get("token");
                 const ticket = urlParams.get("ticket");
-                if (token && ticket) {
+                if (ticket) {
                     window.history.replaceState({}, document.title, "/");
                     this.authLoading = true;
-                    fetch(`/api/auth/verify?ticket=${ticket}&token=${token}`)
+                    fetch(`/api/auth/verify?ticket=${ticket}`)
                         .then((response) => {
                             response.json().then((responseData) => {
                                 if (responseData.status === "success") {

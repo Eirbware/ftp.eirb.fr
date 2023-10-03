@@ -14,15 +14,7 @@ class AuthController
 
     public static function redirect(): bool
     {
-        $redirectUrl = input("redirectUrl", null);
-
-        // One of the required parameters is missing
-        if ($redirectUrl === null || !is_string($redirectUrl)) {
-            return error("Le paramètre 'redirectUrl' est manquant !", "MISSING_PARAMETER", 401);
-        }
-
-        $token = base64_encode($redirectUrl);
-        $authUrl = "https://cas.bordeaux-inp.fr/login?service=https://aboin.vvv.enseirb-matmeca.fr/casAuth?token=$token@bordeaux-inp.fr";
+        $authUrl = "https://cas.bordeaux-inp.fr/login?service=https://ftp.eirb.fr";
         response()->redirect($authUrl);
         return true;
     }
@@ -76,16 +68,15 @@ class AuthController
 
     public static function verify(): bool
     {
-        $token = input("token", null);
         $ticket = input("ticket", null);
 
         // One of the required parameters is missing
-        if ($token === null || $ticket === null) {
-            return error("Le paramètre 'token' ou 'ticket' est manquant !", "MISSING_PARAMETER", 401);
+        if ($ticket === null) {
+            return error("Le paramètre 'ticket' est manquant !", "MISSING_PARAMETER", 401);
         }
 
         // We validate the CAS ticket
-        $casServiceUrl = "https://aboin.vvv.enseirb-matmeca.fr/casAuth?token=" . $token;
+        $casServiceUrl = "https://ftp.eirb.fr";
         $casValidationUrl = "https://cas.bordeaux-inp.fr/serviceValidate?service=" . urlencode($casServiceUrl) . "&ticket=" . $ticket;
 
         // create curl resource
