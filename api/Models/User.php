@@ -19,6 +19,8 @@ class User extends AbstractModel
     public $first_name;
     /** @var string */
     public $last_name;
+    /** @var string|null */
+    public $details;
     /** @var bool */
     public $admin;
     /** @var string|null */

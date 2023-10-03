@@ -275,19 +275,25 @@
                                                 class="col-lg-2 control-label">Identifiant</label>
                                             <div class="col-lg-10"><input class="form-control" id="inputUsername"
                                                     placeholder="Entrez un identifiant CAS" type="text"
-                                                    v-model="activeUser.id" :disabled="!activeUser._blank"></div>
+                                                    v-model.trim="activeUser.id" :disabled="!activeUser._blank"></div>
                                         </div>
                                         <div class="form-group"><label for="inputFirstname"
                                                 class="col-lg-2 control-label">Prénom</label>
                                             <div class="col-lg-10"><input class="form-control" id="inputFirstname"
                                                     placeholder="Entrez un prénom" type="text"
-                                                    v-model="activeUser.first_name"></div>
+                                                    v-model.trim="activeUser.first_name"></div>
                                         </div>
                                         <div class="form-group"><label for="inputLastname"
                                                 class="col-lg-2 control-label">Nom</label>
                                             <div class="col-lg-10"><input class="form-control" id="inputLastname"
                                                     placeholder="Entrez un nom" type="text"
-                                                    v-model="activeUser.last_name"></div>
+                                                    v-model.trim="activeUser.last_name"></div>
+                                        </div>
+                                        <div class="form-group"><label for="inputDetails"
+                                                class="col-lg-2 control-label">Détails</label>
+                                            <div class="col-lg-10"><input class="form-control" id="inputDetails"
+                                                    placeholder="Entrez le rôle de cet utilisateur, son poste..." type="text"
+                                                    v-model.trim="activeUser.details"></div>
                                         </div>
                                         <div class="form-group"><label for="inputAdmin"
                                                 class="col-lg-2 control-label">Admin ?</label>
@@ -401,6 +407,7 @@
                                     <th>ID</th>
                                     <th>Prénom</th>
                                     <th>Nom</th>
+                                    <th>Détails</th>
                                     <th class="text-center">Admin</th>
                                     <th>Ajouté par</th>
                                     <th class="text-center">Sites</th>
@@ -412,6 +419,7 @@
                                     <td>{{ user.id }}</td>
                                     <td>{{ user.first_name }}</td>
                                     <td>{{ user.last_name }}</td>
+                                    <td>{{ user.details }}</td>
                                     <td class="text-center"><span class="material-symbols-outlined">{{ user.admin ?
                                             "check_box" : "check_box_outline_blank" }}</span></td>
                                     <td>{{ user.added_by ? user.added_by : "∅" }}</td>
@@ -581,6 +589,7 @@
             id: "",
             first_name: "",
             last_name: "",
+            details: "",
             admin: false,
         }
 
@@ -711,7 +720,10 @@
                             headers: {
                                 'Content-Type': 'application/json'
                             },
-                            body: JSON.stringify(this.activeUser)
+                            body: JSON.stringify({
+                                ...this.activeUser,
+                                details: this.activeUser.details?.length ? this.activeUser.details : null,
+                            })
                         })
                             .then(response => response.json())
                             .then(responseData => {
@@ -728,7 +740,10 @@
                             headers: {
                                 'Content-Type': 'application/json'
                             },
-                            body: JSON.stringify(this.activeUser)
+                            body: JSON.stringify({
+                                ...this.activeUser,
+                                details: this.activeUser.details?.length ? this.activeUser.details : null,
+                            })
                         })
                             .then(response => response.json())
                             .then(responseData => {

@@ -6,6 +6,8 @@ use FtpEirb\Models\TempAccess;
 use FtpEirb\Models\User;
 use FtpEirb\Models\UserSite;
 
+use Dotenv;
+
 class AuthController
 {
     // This property is set by the AuthMiddleware
@@ -19,28 +21,17 @@ class AuthController
         return true;
     }
 
-    public static function cas(): bool
+    public static function loginDev(string $username): bool
     {
-        $token = input("token", null);
-        $ticket = input("ticket", null);
-
-        // One of the required parameters is missing
-        if ($token === null || $ticket === null || !is_string($token) || !is_string($ticket)) {
-            return error("Le paramètre 'token' ou 'ticket' est manquant !", "MISSING_PARAMETER", 401);
+        // We load the environment variables
+        $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . "/../../");
+        $dotenv->load();
+        
+        if (!isset($_ENV["ENV"]) || $_ENV["ENV"] !== "development") {
+            return error("Vous ne pouvez pas utiliser cette fonctionnalité en production !", "NOT_ALLOWED_IN_PRODUCTION", 403);
         }
 
-        // Split domain and redirectUrl
-        $parts = explode("@", $token);
-        $redirectUrl = base64_decode($parts[0]);
-        $callbackUrl = $redirectUrl . "?token=$token&ticket=$ticket";
-        response()->redirect($callbackUrl);
-        return true;
-    }
-
-    public static function success(): void
-    {
-        echo 'Authentification en cours... Veuillez patienter.';
-        exit(0);
+        return self::loginAs($username);
     }
 
     private static function loginAs(string $username): bool

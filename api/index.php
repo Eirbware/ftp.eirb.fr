@@ -19,8 +19,7 @@ Router::group(['prefix' => '/api'], function () {
     // Authentication routes (not already authenticated)
     Router::group(['prefix' => '/auth'], function () {
         Router::get('/redirect', 'AuthController@redirect');
-        Router::get('/cas', 'AuthController@cas');
-        Router::get('/success', 'AuthController@success');
+        Router::get('/login-dev/{username}', 'AuthController@loginDev');
         Router::get('/verify', 'AuthController@verify');
     });
 

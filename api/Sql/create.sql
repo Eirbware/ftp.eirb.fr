@@ -2,6 +2,7 @@ CREATE TABLE users(
     id VARCHAR(50) NOT NULL,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
+    details VARCHAR(255),
     admin BOOLEAN,
     added_by VARCHAR(50),
     PRIMARY KEY (id)

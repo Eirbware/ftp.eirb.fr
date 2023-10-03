@@ -22,6 +22,7 @@ class FtpEirbCli extends CLI
         $options->setHelp('This script allows you to create the database schema and the first user of the application.');
         $options->registerCommand('db:create', 'Create database schema (tables and procedures)');
         $options->registerCommand('db:drop', 'Drop database schema (tables and procedures)');
+        $options->registerCommand('db:query', 'Run a custom SQL query and display the result');
     }
 
     // implement your code
@@ -36,6 +37,8 @@ class FtpEirbCli extends CLI
             $this->createDatabaseSchema($climate);
         } elseif ($options->getCmd() === 'db:drop') {
             $this->dropDatabaseSchema();
+        } elseif ($options->getCmd() === 'db:query') {
+            $this->runSqlQuery($climate);
         } elseif ($options->getOpt('version')) {
             $this->info("FTP'eirb v.1.0.0");
         } else {
@@ -130,7 +133,7 @@ class FtpEirbCli extends CLI
         if ($response === $options[0]) {
             $this->info('User creation form');
             /** @var \League\CLImate\TerminalObject\Dynamic\Input $input */
-            $input = $climate->input('- Enter the id:');
+            $input = $climate->input('- Enter the id (CAS login):');
             $id = $input->prompt();
 
             /** @var \League\CLImate\TerminalObject\Dynamic\Input $input */
@@ -141,10 +144,15 @@ class FtpEirbCli extends CLI
             $input = $climate->input('- Enter the last name:');
             $lastName = $input->prompt();
 
+            /** @var \League\CLImate\TerminalObject\Dynamic\Input $input */
+            $input = $climate->input('- Enter the details about the user (role, etc.):');
+            $details = $input->prompt();
+
             $user = new FtpEirb\Models\User();
             $user->id = $id;
             $user->first_name = $firstName;
             $user->last_name = $lastName;
+            $user->details = $details;
             $user->admin = true;
             $user->save();
             if (FtpEirb\Models\User::getById($id)) {
@@ -173,6 +181,33 @@ class FtpEirbCli extends CLI
         }
         $db->exec($sql);
         $this->success('Database schema dropped successfully !');
+        exit;
+    }
+
+    /**
+     * Run custom SQL queries and display the result
+     * 
+     * @param CLImate $climate
+     * 
+     * @return void
+     */
+    private function runSqlQuery($climate) {
+        $db = Database::getInstance();
+
+        $this->info('SQL query');
+        /** @var \League\CLImate\TerminalObject\Dynamic\Input $input */
+        $input = $climate->input('- Enter the SQL query to execute:');
+        $sql = $input->prompt();
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute();
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        if ($result) {
+            $climate->table($result);
+        } else {
+            $this->error('No result.');
+        }
+
         exit;
     }
 }

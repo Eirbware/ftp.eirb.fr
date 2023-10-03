@@ -20,6 +20,7 @@ class AdminController
         $id = input('id', null);
         $firstName = input('first_name', null);
         $lastName = input('last_name', null);
+        $details = input('details', null);
         $admin = input('admin', null);
 
         // Check that id is a string made of letters and numbers and that it is between 1 and 50 characters long
@@ -37,6 +38,11 @@ class AdminController
             return error("Le paramètre 'last_name' doit être une chaîne de 1 à 100 caractères !", "INVALID_LAST_NAME");
         }
 
+        // Check that if details is set, it is a string that it is between 1 and 255 characters long
+        if ($details !== null && (!is_string($details) || strlen($details) < 1 || strlen($details) > 255)) {
+            return error("Le paramètre 'details' doit être une chaîne de 1 à 255 caractères !", "INVALID_DETAILS");
+        }
+
         // Check that admin is a boolean
         if ($admin === null) {
             return error("Le paramètre 'admin' doit être un booléen !", "INVALID_ADMIN");
@@ -52,6 +58,7 @@ class AdminController
         $user->id = $id;
         $user->first_name = $firstName;
         $user->last_name = $lastName;
+        $user->details = $details;
         $user->admin = $admin ? true : false;
         $user->added_by = AuthController::$user->id;
 
@@ -68,6 +75,7 @@ class AdminController
     {
         $firstName = input('first_name', null);
         $lastName = input('last_name', null);
+        $details = input('details', null);
         $admin = input('admin', null);
 
         // Check that first_name is a string that it is between 1 and 100 characters long
@@ -78,6 +86,11 @@ class AdminController
         // Check that last_name is a string that it is between 1 and 100 characters long
         if ($lastName === null || !is_string($lastName) || strlen($lastName) < 1 || strlen($lastName) > 100) {
             return error("Le paramètre 'last_name' doit être une chaîne de 1 à 100 caractères !", "INVALID_LAST_NAME");
+        }
+
+        // Check that if details is set, it is a string that it is between 1 and 255 characters long
+        if ($details !== null && (!is_string($details) || strlen($details) < 1 || strlen($details) > 255)) {
+            return error("Le paramètre 'details' doit être une chaîne de 1 à 255 caractères !", "INVALID_DETAILS");
         }
 
         // Check that admin is a boolean
@@ -99,6 +112,7 @@ class AdminController
         // We update the user
         $user->first_name = $firstName;
         $user->last_name = $lastName;
+        $user->details = $details;
         $user->admin = $admin ? true : false;
 
         try {
@@ -322,6 +336,7 @@ class AdminController
                     'id' => $user->id,
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
+                    'details' => $user->details,
                     'admin' => $user->admin ? true : false,
                     'added_by' => $user->added_by ? $user->added_by : null,
                 ];
